@@ -36,6 +36,7 @@ const OREF_HEADERS  = {
 };
 
 const ALL_CLEAR_RE = /האירוע הסתיים|יכולים לצאת|ניתן לצאת|אפשר לצאת|הסכנה.*חלפה|danger.*passed|event.*ended/i;
+const ACTIVE_ALERT_RE = /היכנסו|הכנסו|מייד למרחב המוגן|מיד למרחב המוגן|ירי רקטות וטילים|כלי טייס עוין|חדירת מחבלים|רעידת אדמה|חומרים מסוכנים|enter shelter|active alert/i;
 const WARNING_RE = /התקרבו|זוהה שיגור|התרעות עלולות|הישארו בקרבת|קרוב למרחב מוגן/i;
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -98,6 +99,15 @@ function classifyEvent({ cityValue, category, title, eventAt }) {
     return remember(cityValue, {
       status: 'green',
       reason: 'oref_all_clear',
+      alertTitle,
+      eventAt: recordedAt,
+    });
+  }
+
+  if (ACTIVE_ALERT_RE.test(text) || (Number.isInteger(cat) && cat >= 1 && cat <= 9)) {
+    return remember(cityValue, {
+      status: 'red',
+      reason: 'active_alert',
       alertTitle,
       eventAt: recordedAt,
     });

@@ -32,4 +32,20 @@ status = computeStatus(city, { cat: 14, title: 'התקרבו למרחב מוגן
 assert.equal(status.status, 'yellow');
 assert.equal(status.reason, 'oref_warning');
 
+reset();
+status = computeStatus('קריית שמונה', null, [
+  {
+    alertDate: '2026-06-14 18:55:38',
+    category: 1,
+    title: 'ירי רקטות וטילים - היכנסו למרחב המוגן',
+    data: 'קריית שמונה',
+  },
+]);
+assert.equal(status.status, 'red');
+assert.equal(status.reason, 'active_alert');
+
+status = computeStatus('קריית שמונה', null, []);
+assert.equal(status.status, 'red');
+assert.equal(status.reason, 'waiting_oref_all_clear');
+
 console.log('status flow ok');
