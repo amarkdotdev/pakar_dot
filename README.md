@@ -1,6 +1,6 @@
 # PakarDot
 
-PakarDot is a standalone macOS alert-status app for Ma'aleh Edomim (`מעלה אדומים`). It shows a large overnight-friendly status display:
+PakarDot is a standalone macOS alert-status app for Israeli cities served by Pikud HaOref. It defaults to Ma'aleh Edomim (`מעלה אדומים`), but you can choose any city from the official Pikud HaOref city list. It shows a large overnight-friendly status display:
 
 - **Green**: no active local alert known.
 - **Yellow**: stay in the mamad / protected room until Pikud HaOref sends an explicit all-clear/update.
@@ -38,7 +38,7 @@ On Apple Silicon, the built app is at `release/mac-arm64/PakarDot.app`.
   - `https://www.oref.org.il/warningMessages/alert/Alerts.json`
   - `https://www.oref.org.il/warningMessages/alert/History/AlertsHistory.json`
 - The frontend subscribes over a local WebSocket.
-- The city defaults to `מעלה אדומים`, using the official city value from `pikud-haoref-api/cities.json`.
+- Cities are loaded from `pikud-haoref-api/cities.json`, and the app subscribes to the selected city's official alert value. The default city is `מעלה אדומים`.
 - Yellow does **not** use a fixed timer. It remains yellow after a warning/alert until the feed contains an official all-clear style update such as `האירוע הסתיים`, `יכולים לצאת`, or `ניתן לצאת`.
 
 ## Safety Note
@@ -81,4 +81,3 @@ Generated files are intentionally ignored:
 - OS/editor junk such as `.DS_Store`
 
 No API keys or secrets are required.
-
