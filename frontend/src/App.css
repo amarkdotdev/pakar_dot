@@ -27,6 +27,24 @@ body {
   touch-action: manipulation;
 }
 
+body.is-electron::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 36px;
+  -webkit-app-region: drag;
+  z-index: 10;
+}
+
+button,
+input,
+.city-btn,
+.btn-wakelock,
+.picker-list,
+.picker-item {
+  -webkit-app-region: no-drag;
+}
+
 /* ── Main app layout ───────────────────────────────────────────────────────── */
 .app {
   display: flex;
