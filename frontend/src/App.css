@@ -240,10 +240,15 @@ body.is-electron .top-bar {
   gap: 12px;
 }
 
+body.is-electron .picker {
+  padding-top: 44px;
+}
+
 .picker-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .picker-title h1 {
@@ -258,9 +263,25 @@ body.is-electron .top-bar {
 }
 
 .picker-cancel {
-  font-size: 1.2rem;
-  opacity: 0.5;
-  margin-top: 4px;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 0;
+  flex: 0 0 32px;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: var(--dim);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 1;
+}
+.picker-cancel:hover,
+.picker-cancel:active {
+  background: rgba(255,255,255,0.1);
+  color: var(--fg);
 }
 
 .picker-search {
