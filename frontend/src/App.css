@@ -40,6 +40,7 @@ button,
 input,
 .city-btn,
 .btn-wakelock,
+.btn-update,
 .picker-list,
 .picker-item {
   -webkit-app-region: no-drag;
@@ -79,6 +80,7 @@ input,
   padding: 12px 16px;
   flex-shrink: 0;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 body.is-electron .top-bar {
@@ -153,6 +155,29 @@ body.is-electron .top-bar {
   background: rgba(0,230,118,0.12);
   border-color: rgba(0,230,118,0.35);
   color: #00e676;
+}
+
+.btn-update {
+  background: #0a84ff;
+  border: 1px solid #55aaff;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  line-height: 1;
+}
+.btn-update:hover {
+  background: #2997ff;
+  border-color: #7fc0ff;
+}
+.btn-update:disabled {
+  cursor: default;
+  opacity: 0.72;
 }
 
 /* ── Dot stage ──────────────────────────────────────────────────────────────── */

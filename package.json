@@ -2,6 +2,7 @@
   "name": "pakardot",
   "version": "1.0.0",
   "description": "Real-time Israeli Pikud HaOref alert status — desktop app",
+  "author": "amarkdotdev",
   "main": "electron/main.js",
   "private": true,
   "scripts": {
@@ -14,9 +15,11 @@
     "build:mac-arm": "electron-builder --mac --arm64",
     "build:mac-intel": "electron-builder --mac --x64",
     "build:mac-universal": "electron-builder --mac --universal",
+    "release:mac": "npm run prebuild && electron-builder --mac --publish always",
     "dist": "npm run prebuild && npm run build:mac"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "express": "^4.19.2",
     "pikud-haoref-api": "^5.0.3",
     "ws": "^8.18.0"
@@ -44,20 +47,61 @@
       "output": "release",
       "buildResources": "build-resources"
     },
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.utilities",
       "icon": "build-resources/icon.icns",
       "target": [
-        { "target": "dmg",  "arch": ["arm64", "x64"] },
-        { "target": "zip",  "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ],
       "darkModeSupport": true,
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false,
-      "identity": null
+      "hardenedRuntime": true,
+      "entitlements": "build-resources/entitlements.mac.plist",
+      "entitlementsInherit": "build-resources/entitlements.mac.inherit.plist",
+      "notarize": true,
+      "gatekeeperAssess": false
     },
     "dmg": {
-      "writeUpdateInfo": false
-    }
+      "writeUpdateInfo": true,
+      "title": "${productName} ${version}",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 130,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "amarkdotdev",
+        "repo": "pakar_dot",
+        "releaseType": "release"
+      }
+    ]
   }
 }

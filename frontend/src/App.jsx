@@ -119,6 +119,7 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [wakeLock, setWakeLock]   = useState(false);
   const [wakeLockSupported, setWLSupported] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState(null);
 
   const wsRef         = useRef(null);
   const wakeLockRef   = useRef(null);
@@ -133,6 +134,18 @@ export default function App() {
 
   useEffect(() => {
     document.body.classList.toggle('is-electron', navigator.userAgent.includes('Electron'));
+  }, []);
+
+  useEffect(() => {
+    const updates = window.pakardotUpdates;
+    if (!updates) return undefined;
+
+    const off = updates.onStatus((next) => setUpdateStatus(next));
+    updates.check().then((next) => {
+      if (next?.state && next.state !== 'checking') setUpdateStatus(next);
+    }).catch(() => {});
+
+    return off;
   }, []);
 
   // ── Wake Lock ───────────────────────────────────────────────────────────────
@@ -225,6 +238,66 @@ export default function App() {
     setLastChecked(null);
   }, []);
 
+  const updateAction = useCallback(async () => {
+    const updates = window.pakardotUpdates;
+    if (!updates || !updateStatus) return;
+
+    if (updateStatus.state === 'available') {
+      setUpdateStatus((prev) => ({ ...prev, state: 'downloading', percent: 0 }));
+      const next = await updates.download();
+      if (next?.state && next.state !== 'downloading') setUpdateStatus(next);
+      return;
+    }
+
+    if (updateStatus.state === 'downloaded') {
+      await updates.install();
+      return;
+    }
+
+    if (updateStatus.state === 'error') {
+      const next = await updates.check();
+      if (next?.state && next.state !== 'checking') setUpdateStatus(next);
+    }
+  }, [updateStatus]);
+
+  const updateButton = (() => {
+    if (!window.pakardotUpdates || !updateStatus) return null;
+
+    if (updateStatus.state === 'available') {
+      return {
+        label: `Update ${updateStatus.version || ''}`.trim(),
+        title: 'Download update',
+        disabled: false,
+      };
+    }
+
+    if (updateStatus.state === 'downloading') {
+      return {
+        label: `Updating ${updateStatus.percent || 0}%`,
+        title: 'Downloading update',
+        disabled: true,
+      };
+    }
+
+    if (updateStatus.state === 'downloaded') {
+      return {
+        label: 'Restart to update',
+        title: 'Install update and restart',
+        disabled: false,
+      };
+    }
+
+    if (updateStatus.state === 'error') {
+      return {
+        label: 'Retry update',
+        title: updateStatus.message || 'Retry update check',
+        disabled: false,
+      };
+    }
+
+    return null;
+  })();
+
   // ── City Picker screen ──────────────────────────────────────────────────────
   if (picking) {
     return (
@@ -259,6 +332,17 @@ export default function App() {
             aria-label="Toggle screen wake lock"
           >
             {wakeLock ? 'Stay-on ON' : 'Stay-on OFF'}
+          </button>
+        )}
+        {updateButton && (
+          <button
+            className="btn-update"
+            onClick={updateAction}
+            title={updateButton.title}
+            disabled={updateButton.disabled}
+            aria-label={updateButton.title}
+          >
+            {updateButton.label}
           </button>
         )}
       </div>

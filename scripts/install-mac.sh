@@ -32,10 +32,12 @@ git clone --depth 1 "${REPO_URL}" "${WORKDIR}/pakar_dot"
 cd "${WORKDIR}/pakar_dot"
 
 echo "Installing dependencies..."
-npm install
+npm install --no-audit --loglevel=error
 
 echo "Building frontend, backend, and icon..."
 npm run prebuild
+
+export CSC_IDENTITY_AUTO_DISCOVERY=false
 
 ARCH="$(uname -m)"
 if [ "${ARCH}" = "arm64" ]; then
@@ -62,4 +64,3 @@ echo "Launching PakarDot..."
 open "${APP_DEST}"
 
 echo "Done. PakarDot is installed at ${APP_DEST}"
-

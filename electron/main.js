@@ -1,9 +1,11 @@
-const { app, BrowserWindow, Menu, shell, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, Menu, shell, powerSaveBlocker, ipcMain } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
 let mainWindow = null;
 let serverPort = null;
 let powerBlockerId = null;
+let updatesReady = false;
 
 // ── Resolve paths for both dev and packaged modes ────────────────────────────
 const isPackaged = app.isPackaged;
@@ -39,6 +41,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -58,6 +61,89 @@ function createWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
+function sendUpdateStatus(payload) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('updates:status', payload);
+}
+
+function configureUpdates() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('checking-for-update', () => {
+    sendUpdateStatus({ state: 'checking' });
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    updatesReady = true;
+    sendUpdateStatus({
+      state: 'available',
+      version: info.version,
+      releaseName: info.releaseName,
+    });
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    updatesReady = false;
+    sendUpdateStatus({ state: 'not-available', version: info.version });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    sendUpdateStatus({
+      state: 'downloading',
+      percent: Math.round(progress.percent || 0),
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendUpdateStatus({
+      state: 'downloaded',
+      version: info.version,
+      releaseName: info.releaseName,
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    sendUpdateStatus({
+      state: 'error',
+      message: error?.message || 'Update check failed',
+    });
+  });
+
+  ipcMain.handle('updates:check', async () => {
+    if (!app.isPackaged) {
+      return { state: 'disabled', message: 'Updates are only available in the packaged Mac app.' };
+    }
+    try {
+      await autoUpdater.checkForUpdates();
+      return { state: 'checking' };
+    } catch (error) {
+      return { state: 'error', message: error?.message || 'Update check failed' };
+    }
+  });
+
+  ipcMain.handle('updates:download', async () => {
+    if (!app.isPackaged) {
+      return { state: 'disabled', message: 'Updates are only available in the packaged Mac app.' };
+    }
+    if (!updatesReady) {
+      return { state: 'idle', message: 'No update is ready to download.' };
+    }
+    try {
+      await autoUpdater.downloadUpdate();
+      return { state: 'downloading' };
+    } catch (error) {
+      return { state: 'error', message: error?.message || 'Update download failed' };
+    }
+  });
+
+  ipcMain.handle('updates:install', () => {
+    if (!app.isPackaged) return { state: 'disabled' };
+    autoUpdater.quitAndInstall(false, true);
+    return { state: 'installing' };
+  });
+}
+
 // ── App lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
   try {
@@ -69,6 +155,7 @@ app.whenReady().then(async () => {
   }
 
   createWindow();
+  configureUpdates();
 
   // OS-level "prevent display sleep" — complements the in-page Wake Lock API.
   // Activated by default since this app's purpose is to stay on for hours.
@@ -94,6 +181,10 @@ app.whenReady().then(async () => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  if (app.isPackaged) {
+    setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 3500);
+  }
 });
 
 app.on('window-all-closed', () => {
