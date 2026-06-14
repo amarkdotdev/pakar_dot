@@ -42,6 +42,7 @@ const WARNING_RE = /התקרבו|זוהה שיגור|התרעות עלולות|�
 let lastAlerts   = null;
 let lastHistory = [];
 let lastCheckedAt = null;
+let pollTimer = null;
 const cityStates = new Map(); // cityValue → latest known local state while app is running
 const subscribers = new Map(); // cityValue → Set<WebSocket>
 
@@ -144,7 +145,14 @@ function computeStatus(cityValue, alerts, history) {
   }
 
   if (!alerts?.data?.length) {
-    if (previous.status === 'red' || previous.status === 'yellow') {
+    if (previous.status === 'red') {
+      return {
+        ...previous,
+        status: 'red',
+        reason: 'waiting_oref_all_clear',
+      };
+    }
+    if (previous.status === 'yellow') {
       return {
         ...previous,
         status: 'yellow',
@@ -199,10 +207,13 @@ async function poll() {
   }
 }
 
-console.log(`✓ ${ALL_CITIES.length} cities loaded from Pikud HaOref database`);
-console.log(`✓ Polling Pikud HaOref every ${POLL_MS / 1000}s`);
-setInterval(poll, POLL_MS);
-poll();
+function startPolling() {
+  if (pollTimer) return;
+  console.log(`✓ ${ALL_CITIES.length} cities loaded from Pikud HaOref database`);
+  console.log(`✓ Polling Pikud HaOref every ${POLL_MS / 1000}s`);
+  pollTimer = setInterval(poll, POLL_MS);
+  poll();
+}
 
 // ── WebSocket ─────────────────────────────────────────────────────────────────
 wss.on('connection', ws => {
@@ -264,6 +275,7 @@ app.get('*', (_req, res) => res.sendFile(path.join(DIST, 'index.html')));
 function start({ port = parseInt(process.env.PORT ?? '3000', 10), host = '0.0.0.0' } = {}) {
   return new Promise((resolve, reject) => {
     server.once('error', reject);
+    startPolling();
     server.listen(port, host, () => {
       const actualPort = server.address().port;
       console.log(`PakarDot listening on ${host}:${actualPort}`);
@@ -274,4 +286,4 @@ function start({ port = parseInt(process.env.PORT ?? '3000', 10), host = '0.0.0.
 
 if (require.main === module) start();
 
-module.exports = { start };
+module.exports = { start, computeStatus, cityStates };
