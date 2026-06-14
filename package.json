@@ -1,0 +1,63 @@
+{
+  "name": "pakardot",
+  "version": "1.0.0",
+  "description": "Real-time Israeli Pikud HaOref alert status — desktop app",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install --omit=dev",
+    "build:icon": "bash build-resources/gen-icns.sh",
+    "prebuild": "npm run build:frontend && npm run build:backend && npm run build:icon",
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:mac-arm": "electron-builder --mac --arm64",
+    "build:mac-intel": "electron-builder --mac --x64",
+    "build:mac-universal": "electron-builder --mac --universal",
+    "dist": "npm run prebuild && npm run build:mac"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pikud-haoref-api": "^5.0.3",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.pakardot.app",
+    "productName": "PakarDot",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "node_modules/**/*",
+      "backend/server.js",
+      "backend/package.json",
+      "backend/node_modules/**/*",
+      "frontend/dist/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/*.{md,markdown}"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build-resources"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "build-resources/icon.icns",
+      "target": [
+        { "target": "dmg",  "arch": ["arm64", "x64"] },
+        { "target": "zip",  "arch": ["arm64", "x64"] }
+      ],
+      "darkModeSupport": true,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "dmg": {
+      "writeUpdateInfo": false
+    }
+  }
+}

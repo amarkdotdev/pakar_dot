@@ -1,0 +1,18 @@
+{
+  "name": "pakardot-backend",
+  "version": "1.0.0",
+  "description": "Pikud HaOref real-time alert proxy + WebSocket hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pikud-haoref-api": "^5.0.3",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

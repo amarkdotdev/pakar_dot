@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/.git
+**/.DS_Store
+**/npm-debug.log*
+frontend/public/icon-192.png
+frontend/public/icon-512.png
+frontend/public/apple-touch-icon.png
