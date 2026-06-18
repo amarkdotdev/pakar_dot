@@ -59,6 +59,11 @@ const DEFAULT_CITY = {
   countdown: 90,
 };
 
+const PREVIEW_STATUS = (() => {
+  const value = new URLSearchParams(window.location.search).get('dockPreview');
+  return ['green', 'yellow', 'red', 'unknown'].includes(value) ? value : null;
+})();
+
 function formatTime(ms) {
   if (!ms) return 'Waiting for first check';
   return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -72,6 +77,7 @@ function reasonLabel(reason) {
     oref_warning: 'official warning',
     waiting_oref_all_clear: 'waiting for official all-clear',
     poll_error: 'poll error',
+    preview: 'preview',
   };
   return labels[reason] || reason?.replace(/_/g, ' ') || '';
 }
@@ -103,6 +109,58 @@ function alertSound(status) {
     beep(660, 0.5, 0.3);
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   }
+}
+
+function dockIconDataUrl(status) {
+  const color = STATUS[status]?.color ?? STATUS.unknown.color;
+  const shadow = ({
+    green: '#0a6c41',
+    yellow: '#896d00',
+    red: '#7f102a',
+    unknown: '#4a4a4a',
+  })[status] ?? '#4a4a4a';
+  const ring = ({
+    green: '#073322',
+    yellow: '#433400',
+    red: '#370612',
+    unknown: '#242424',
+  })[status] ?? '#242424';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.fillStyle = '#0b0b0b';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 512, 512, 122);
+  ctx.fill();
+
+  ctx.fillStyle = shadow;
+  ctx.globalAlpha = 0.34;
+  ctx.beginPath();
+  ctx.arc(256, 256, 194, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(256, 256, 172, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = ring;
+  ctx.lineWidth = 24;
+  ctx.beginPath();
+  ctx.arc(256, 256, 172, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.arc(210, 198, 54, 0, Math.PI * 2);
+  ctx.fill();
+
+  return canvas.toDataURL('image/png');
 }
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -137,6 +195,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    window.pakardotDock?.setStatus(status, dockIconDataUrl(status));
+  }, [status]);
+
+  useEffect(() => {
+    if (PREVIEW_STATUS) return undefined;
+
     const updates = window.pakardotUpdates;
     if (!updates) return undefined;
 
@@ -222,6 +286,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (PREVIEW_STATUS) {
+      setConnected(true);
+      setStatus(PREVIEW_STATUS);
+      setReason('preview');
+      setTitle('Dock icon preview');
+      return undefined;
+    }
+
     if (city && !picking) connect(city.value);
     return () => {
       clearTimeout(reconnectRef.current);

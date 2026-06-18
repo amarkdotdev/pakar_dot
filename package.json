@@ -1,6 +1,6 @@
 {
   "name": "pakardot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time Israeli Pikud HaOref alert status — desktop app",
   "author": "amarkdotdev",
   "main": "electron/main.js",

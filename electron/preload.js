@@ -10,3 +10,13 @@ contextBridge.exposeInMainWorld('pakardotUpdates', {
     return () => ipcRenderer.removeListener('updates:status', listener);
   },
 });
+
+contextBridge.exposeInMainWorld('pakardotDock', {
+  setStatus: (status, dataUrl) => ipcRenderer.send('dock:set-status', { status, dataUrl }),
+});
+
+if (process.argv.includes('--pakardot-enable-debug')) {
+  contextBridge.exposeInMainWorld('pakardotDebug', {
+    setDockStatus: (status, dataUrl) => ipcRenderer.send('dock:set-status', { status, dataUrl }),
+  });
+}
